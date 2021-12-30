@@ -35,10 +35,18 @@ public class Board {
         for(int i = 0; i < 8; i++) {
             for(int j = 0; j < 8; j++) {
                 if(tiles[i][j].getOccupant() != null) {
-                    if(tiles[i][j].getOccupant().isMaxPiece())
-                        System.out.print('X');
-                    else
-                        System.out.print('O');
+                    if(tiles[i][j].getOccupant().isMaxPiece()){
+                        if(tiles[i][j].getOccupant().isKingPiece())
+                            System.out.print('B');
+                        else
+                            System.out.print('b');
+                    }
+                    else{
+                        if(tiles[i][j].getOccupant().isKingPiece())
+                            System.out.print('R');
+                        else
+                            System.out.print('r');
+                    }
                 }
                 else
                     System.out.print('-');
