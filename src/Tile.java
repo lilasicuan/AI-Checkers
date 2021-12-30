@@ -5,6 +5,7 @@ public class Tile {
     // Each Tile starts off bare
     public Tile() {
         occupied = false;
+        occupant = null;
     }
 
     public void toggleOccupant(Piece occupant) {
