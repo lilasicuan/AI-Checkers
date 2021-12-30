@@ -11,39 +11,37 @@ import java.util.ArrayList;
  */
 
 public class Checkers extends Game {
-    public Board board;
-
-    public Checkers() {
-        board = new Board();
-    }
-
     // Will generate the initial state of the game
     public State initGame() {
-        State init = new State(board, true);
+        State init = new State(new Board(), true);
         return init;
     }
 
-    public ArrayList<Tile[]> Actions(State s) {
+    public ArrayList<Tile[]> actions(State s) {
         // Each Tile array is the origin tile and destination tile
         ArrayList<Tile[]> actions = new ArrayList<>();
         /**
          * For every current turn piece,
          * get all actions that can be performed by the piece
          */
-    
-         return actions;
+
+        Board currBoard = s.getBoard();
+
+        // for()
+
+        return actions;
     }
 
-    public int Utility(State s, boolean maxTurn) {
+    public int utility(State s, boolean maxTurn) {
         return 1;
     }
 
-    public State Result(State s, ArrayList<int[]> a) {
-        return new State(board, true);
+    public State result(State s, ArrayList<Tile[]> a) {
+        return new State(new Board(), true);
     }
 
     public boolean isTerminal(State s) {
-        return true;
+        return actions(s).isEmpty();
     }
     
 }
