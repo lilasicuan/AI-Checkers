@@ -30,16 +30,15 @@ public class Checkers extends Game {
         int minPieces = 0;
         int maxPieces = 0;
 
-        for(int i = 0; i < 8; i++) {
-            for(int j = 0; j < 8; j++) {
+        for(int i = 0; i < 8; i++)
+            for(int j = 0; j < 8; j++)
                 if(board.getTile(i, j).isBlack() && board.getTile(i, j).isOccupied()) {
                     if(board.getTile(i, j).getOccupant().isMaxPiece())
                         maxPieces++;
                     else
                         minPieces++;
                 }
-            }
-        }
+
 
         if(minPieces == 0)
             return 1;
@@ -50,7 +49,15 @@ public class Checkers extends Game {
     }
 
     public State result(State s, Tile[] action) {
-        return new State(new Board(), true);
+        Board newBoard = s.getBoard();
+        Tile origin = newBoard.getTile(action[0].getRow(), action[0].getCol());
+        Tile dest = newBoard.getTile(action[1].getRow(), action[1].getCol());
+
+        dest.toggleOccupant(origin.getOccupant());
+        origin.toggleOccupant(null);
+
+        State result = new State(newBoard, !s.isMaxTurn());
+        return result;
     }
 
     public boolean isTerminal(State s) {
@@ -76,12 +83,13 @@ public class Checkers extends Game {
                 newRow = origin.getRow() - dist;
                 newCol = origin.getCol() + dist;
         }
-        if((newRow < 8 && newRow >= 0) && (newCol >= 0 && newCol < 8))
+        if((newRow < 8 && newRow >= 0) && (newCol >= 0 && newCol < 8)) {
             if(!board.getTile(newRow, newCol).isOccupied())
                 return board.getTile(newRow, newCol);
             else
                 if(dist < 2 && board.getTile(newRow, newCol).getOccupant().isMaxPiece() != origin.getOccupant().isMaxPiece()) // if diag piece is not current's piece
                     return isValidDest(origin, direction, board, 2);
+        }
         return null;
     }
 

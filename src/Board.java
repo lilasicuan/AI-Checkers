@@ -32,27 +32,30 @@ public class Board {
 
     // For debugging
     public void displayBoard() {
+        System.out.println("---------------------------------");
         for(int i = 0; i < 8; i++) {
+            System.out.print("|");
             for(int j = 0; j < 8; j++) {
                 if(tiles[i][j].getOccupant() != null) {
                     if(tiles[i][j].getOccupant().isMaxPiece()){
                         if(tiles[i][j].getOccupant().isKingPiece())
-                            System.out.print('R');
+                            System.out.print(" R |");
                         else
-                            System.out.print('r');
+                            System.out.print(" r |");
                     }
                     else{
                         if(tiles[i][j].getOccupant().isKingPiece())
-                            System.out.print('B');
+                            System.out.print(" B |");
                         else
-                            System.out.print('b');
+                            System.out.print(" b |");
                     }
                 }
                 else
-                    System.out.print('-');
+                    System.out.print("   |");
                 if(j == 7)
                     System.out.println();
             }
+            System.out.println("---------------------------------");
         }
     }
 }
