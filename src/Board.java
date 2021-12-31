@@ -9,7 +9,7 @@ public class Board {
     public void initBoard() {
         for(int i = 0; i < 8; i++) 
             for(int j = 0; j < 8; j++) {
-                tiles[i][j] = new Tile();
+                tiles[i][j] = new Tile(i, j);
                 if((i % 2 == 0) != (j % 2 == 0))
                     tiles[i][j].setBlack();
             }
@@ -24,6 +24,10 @@ public class Board {
                 if(tiles[i][j].isBlack())
                     tiles[i][j].toggleOccupant(new Piece(false));
         }
+    }
+
+    public Tile getTile(int row, int col) {
+        return tiles[row][col];
     }
 
     // For debugging

@@ -2,9 +2,13 @@ public class Tile {
     private Piece occupant;
     private boolean occupied;
     private boolean isBlack;
+    private int row;
+    private int col;
 
     // Each Tile starts off bare
-    public Tile() {
+    public Tile(int row, int col) {
+        this.row = row;
+        this.col = col;
         occupied = false;
         occupant = null;
         isBlack = false;
@@ -32,5 +36,17 @@ public class Tile {
 
     public Piece getOccupant() {
         return occupant;
+    }
+
+    public boolean isOccupied() {
+        return occupant != null;
+    }
+
+    public int getRow() {
+        return row;
+    }
+
+    public int getCol() {
+        return col;
     }
 }

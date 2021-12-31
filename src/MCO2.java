@@ -4,8 +4,7 @@ public class MCO2 {
         // Minimax.minimax(initialState);
 
         // Debugging
-        Board b = new Board();
-        b.displayBoard();
+        
     }
 
 }
