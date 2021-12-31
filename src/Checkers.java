@@ -25,11 +25,31 @@ public class Checkers extends Game {
         return actions;
     }
 
-    public int utility(State s, boolean maxTurn) {
-        return 1;
+    public int utility(State s) {
+        Board board = s.getBoard();
+        int minPieces = 0;
+        int maxPieces = 0;
+
+        for(int i = 0; i < 8; i++) {
+            for(int j = 0; j < 8; j++) {
+                if(board.getTile(i, j).isBlack() && board.getTile(i, j).isOccupied()) {
+                    if(board.getTile(i, j).getOccupant().isMaxPiece())
+                        maxPieces++;
+                    else
+                        minPieces++;
+                }
+            }
+        }
+
+        if(minPieces == 0)
+            return 1;
+        if(maxPieces == 0)
+            return -1;
+
+        return 0; // Default if draw
     }
 
-    public State result(State s, ArrayList<Tile[]> a) {
+    public State result(State s, Tile[] action) {
         return new State(new Board(), true);
     }
 
