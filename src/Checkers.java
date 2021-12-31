@@ -1,15 +1,5 @@
 import java.util.ArrayList;
 
-/**
- * Will hold Checkers version of:
- * - Actions(state) : action[]
- * - Result(state, action) : state
- * - Utility(state, player) : int
- * - isTerminal(state) : boolean
- * 
- * Will generate the initial state of the game
- */
-
 public class Checkers extends Game {
     // Will generate the initial state of the game
     public State initGame() {
@@ -70,14 +60,13 @@ public class Checkers extends Game {
             if(!board.getTile(newRow, newCol).isOccupied())
                 return board.getTile(newRow, newCol);
             else
-                if(dist < 2)
+                if(dist < 2 && board.getTile(newRow, newCol).getOccupant().isMaxPiece() != origin.getOccupant().isMaxPiece()) // if diag piece is not current's piece
                     return isValidDest(origin, direction, board, 2);
         return null;
     }
 
     private ArrayList<Tile[]> getValidMoves(Tile tile, boolean isKing, Board board) {
         ArrayList<Tile[]> pieceMoves = new ArrayList<>();
-        Tile[] currMove = new Tile[2];
         Piece occupant = tile.getOccupant();
 
         String[] directions = {"SW", "SE", "NW", "NE"};
@@ -101,6 +90,7 @@ public class Checkers extends Game {
         for(; i < high; i++) {
             Tile dest = isValidDest(tile, directions[i], board, 1);
             if(dest != null) {
+                Tile[] currMove = new Tile[2];
                 currMove[0] = tile;
                 currMove[1] = dest;
                 pieceMoves.add(currMove);
@@ -111,8 +101,13 @@ public class Checkers extends Game {
     }
 
     // Debugging
-    public void displayActions() {
-        
+    public void displayAction(Tile[] action) {
+        System.out.println("[" + action[0].getRow() + ", " + action[0].getCol() + "] to " + "[" + action[1].getRow() + ", " + action[1].getCol() + "]");
+    }
+
+    public void displayAllActions(ArrayList<Tile[]> actions) {
+        for(int i = 0; i < actions.size(); i++)
+            displayAction(actions.get(i));
     }
     
 }
