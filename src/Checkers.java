@@ -7,9 +7,9 @@ public class Checkers extends Game {
         return init;
     }
 
-    public ArrayList<Tile[]> actions(State s) {
+    public ArrayList<ArrayList<Tile>> actions(State s) {
         // Each Tile array is the origin tile and destination tile
-        ArrayList<Tile[]> actions = new ArrayList<>();
+        ArrayList<ArrayList<Tile>> actions = new ArrayList<>();
 
         Board currBoard = s.getBoard();
 
@@ -48,20 +48,28 @@ public class Checkers extends Game {
         return 0; // Default if draw
     }
 
-    public State result(State s, Tile[] action) {
-        Board newBoard = s.getBoard();
-        Tile origin = newBoard.getTile(action[0].getRow(), action[0].getCol());
-        Tile dest = newBoard.getTile(action[1].getRow(), action[1].getCol());
+    public State result(State s, ArrayList<Tile> actionSequence) {
+        // Board newBoard = s.getBoard();
+        // // Tile origin = newBoard.getTile(action[0].getRow(), action[0].getCol());
+        // // Tile dest = newBoard.getTile(action[1].getRow(), action[1].getCol());
 
-        dest.toggleOccupant(origin.getOccupant());
-        origin.toggleOccupant(null);
+        // // dest.toggleOccupant(origin.getOccupant());
+        // // origin.toggleOccupant(null);
 
-        // Updates board if a move was a capture
-        if(dest.getRow() - 2 == origin.getRow() || dest.getRow() + 2 == origin.getRow()) {
+        // // // Updates board if a move was a capture
+        // // if(dest.getRow() - 2 == origin.getRow() || dest.getRow() + 2 == origin.getRow()) {
 
-        }
+        // // }
 
-        State result = new State(newBoard, !s.isMaxTurn());
+        // for(int i = 0; i < actionSequence.size(); i++) {
+        //     if(i < actionSequence.size() - 1) {
+        //         Tile origin = actionSequence.get(i);
+        //         Tile dest = actionSequence.get(i + 1);
+        //     }
+            
+        // }
+
+        State result = new State(new Board(), !s.isMaxTurn());
         return result;
     }
 
@@ -93,14 +101,14 @@ public class Checkers extends Game {
                 return board.getTile(newRow, newCol);
             else
                 if(dist < 2 && board.getTile(newRow, newCol).getOccupant().isMaxPiece() != origin.getOccupant().isMaxPiece()) // if diag piece is not current's piece
-                    return isValidDest(origin, direction, board, dist + 1);
+                    return isValidDest(origin, direction, board, 2);
         }
         return null;
     }
 
-    private ArrayList<Tile[]> getValidMoves(Tile tile, boolean isKing, Board board) {
-        ArrayList<Tile[]> pieceMoves = new ArrayList<>();
-        Piece occupant = tile.getOccupant();
+    private ArrayList<ArrayList<Tile>> getValidMoves(Tile origin, boolean isKing, Board board) {
+        ArrayList<ArrayList<Tile>> pieceMoves = new ArrayList<>();
+        Piece occupant = origin.getOccupant();
 
         String[] directions = {"SW", "SE", "NW", "NE"};
 
@@ -109,7 +117,7 @@ public class Checkers extends Game {
         int high = 2;
 
         // will check directions 2 and 3
-        if(!occupant.isMaxPiece() || occupant.isKingPiece()) {
+        if(!occupant.isMaxPiece()) {
             i = 2;
             high = 4;
         }
@@ -121,25 +129,27 @@ public class Checkers extends Game {
         }
 
         for(; i < high; i++) {
-            Tile dest = isValidDest(tile, directions[i], board, 1);
+            Tile dest = isValidDest(origin, directions[i], board, 1);
             if(dest != null) {
-                Tile[] currMove = new Tile[2];
-                currMove[0] = tile;
-                currMove[1] = dest;
-                pieceMoves.add(currMove);
-                if(captureMade(board, currMove, directions[i]) != null)
-                    pieceMoves.addAll(getValidMoves(currMove[1], isKing, board));
+                ArrayList<Tile> moveSequence = new ArrayList<>(); // For multi-capture moves
+                Tile captured = captureMade(board, origin, dest, directions[i]);
+                if(captured != null)
+                    pieceMoves.addAll(getValidMoves(dest, isKing, board));
+                moveSequence.add(origin);
+                // currMove[1] = dest;
+                pieceMoves.add(moveSequence);
+                
             }
         }
 
         return pieceMoves;
     }
 
-    private Tile captureMade(Board board, Tile[] action, String direction) {
+    private Tile captureMade(Board board, Tile origin, Tile dest, String direction) {
         // If a capture was done
-        if(action[0].getRow() - action[1].getRow() > 1 || action[1].getRow() - action[0].getRow() > 1) {
-            int capturedRow = action[0].getRow();
-            int capturedCol = action[0].getCol();
+        if(Math.abs(origin.getRow() - dest.getRow()) > 1) {
+            int capturedRow = origin.getRow();
+            int capturedCol = origin.getCol();
 
             switch(direction) {
                 case "SW":
@@ -165,11 +175,16 @@ public class Checkers extends Game {
     }
 
     // Debugging
-    public void displayAction(Tile[] action) {
-        System.out.println("[" + action[0].getRow() + ", " + action[0].getCol() + "] to " + "[" + action[1].getRow() + ", " + action[1].getCol() + "]");
+    public void displayAction(ArrayList<Tile> action) {
+        for(int i = 0; i < action.size(); i++) {
+            System.out.print("[" + action.get(i).getRow() + ", " + action.get(i).getCol() + "]");
+            if(i < action.size() - 1)
+                System.out.print(" to ");
+        }
+        
     }
 
-    public void displayAllActions(ArrayList<Tile[]> actions) {
+    public void displayAllActions(ArrayList<ArrayList<Tile>> actions) {
         for(int i = 0; i < actions.size(); i++)
             displayAction(actions.get(i));
     }
