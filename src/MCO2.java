@@ -9,8 +9,14 @@ public class MCO2 {
         Checkers checkers = new Checkers();
         State init = checkers.initGame();
         ArrayList<ArrayList<Tile>> actions = checkers.actions(init);
+        // ArrayList<Tile> sequence = new ArrayList<>();
 
-        // checkers.result(init, actions.get(6)).getBoard().displayBoard();
+        // sequence.add(new Tile(2, 1));
+        // sequence.add(new Tile(4, 3));
+        // sequence.add(new Tile(6, 5));
+
+        // checkers.result(init, sequence).getBoard().displayBoard();
+        // init.getBoard().displayBoard();
 
         //Expected 7 actions upon init
         checkers.displayAllActions(actions);

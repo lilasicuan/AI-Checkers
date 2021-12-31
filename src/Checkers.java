@@ -3,7 +3,7 @@ import java.util.ArrayList;
 public class Checkers extends Game {
     // Will generate the initial state of the game
     public State initGame() {
-        State init = new State(new Board(), true);
+        State init = new State(new Board(true), true);
         return init;
     }
 
@@ -17,14 +17,17 @@ public class Checkers extends Game {
             for(int j = 0; j < 8; j++) {
                 Tile currTile = currBoard.getTile(i, j);
                 // If tile is occupied and if occupant is one of current player's pieces
-                if(currTile.isOccupied() && currTile.getOccupant().isMaxPiece() == s.isMaxTurn())
-                    actions.addAll(getValidMoves(currTile, currTile.getOccupant().isMaxPiece(), s.getBoard()));
+                if(currTile.isOccupied() && currTile.getOccupant().isMaxPiece() == s.isMaxTurn()) {
+                    Board boardCopy = s.getBoard();
+                    actions.addAll(getValidMoves(boardCopy.getTile(i, j), currTile.getOccupant().isMaxPiece(), boardCopy, new ArrayList<ArrayList<Tile>>()));
+                }
             }
         }
 
         return actions;
     }
 
+    // WILL UPDATE
     public int utility(State s) {
         Board board = s.getBoard();
         int minPieces = 0;
@@ -50,22 +53,15 @@ public class Checkers extends Game {
 
     public State result(State s, ArrayList<Tile> actionSequence) {
         Board newBoard = s.getBoard();
-        // Tile origin = newBoard.getTile(action[0].getRow(), action[0].getCol());
-        // Tile dest = newBoard.getTile(action[1].getRow(), action[1].getCol());
 
-        // dest.toggleOccupant(origin.getOccupant());
-        // origin.toggleOccupant(null);
-
-        // // Updates board if a move was a capture
-        // if(dest.getRow() - 2 == origin.getRow() || dest.getRow() + 2 == origin.getRow()) {
-
-        // }
-
-        for(int i = 1; i < actionSequence.size(); i++) {
+        for(int i = 0; i < actionSequence.size(); i++) {
             if(i < actionSequence.size() - 1) {
                 Tile origin = newBoard.getTile(actionSequence.get(i).getRow(), actionSequence.get(i).getCol());
                 Tile dest = newBoard.getTile(actionSequence.get(i + 1).getRow(), actionSequence.get(i + 1).getCol());
 
+                Tile capture = captureMade(newBoard, origin, dest);
+                if(capture != null) // if a capture was made, removes captured piece from board
+                    capture.toggleOccupant(null);
                 dest.toggleOccupant(origin.getOccupant());
                 origin.toggleOccupant(null);
             }
@@ -99,7 +95,7 @@ public class Checkers extends Game {
                 newRow = origin.getRow() - dist;
                 newCol = origin.getCol() + dist;
         }
-        if((newRow < 8 && newRow >= 0) && (newCol >= 0 && newCol < 8)) {
+        if((newRow < 8 && newRow >= 0) && (newCol >= 0 && newCol < 8)) { // If destination is within bounds
             if(!board.getTile(newRow, newCol).isOccupied())
                 return board.getTile(newRow, newCol);
             else
@@ -109,10 +105,9 @@ public class Checkers extends Game {
         return null;
     }
 
-    private ArrayList<ArrayList<Tile>> getValidMoves(Tile origin, boolean isKing, Board board) {
-        ArrayList<ArrayList<Tile>> pieceMoves = new ArrayList<>();
+    // Need to simulate capturing for multi-capture moves
+    private ArrayList<ArrayList<Tile>> getValidMoves(Tile origin, boolean isKing, Board board, ArrayList<ArrayList<Tile>> pieceMoves) {
         Piece occupant = origin.getOccupant();
-
         String[] directions = {"SW", "SE", "NW", "NE"};
 
         // Will check directions 0 and 1
@@ -131,14 +126,28 @@ public class Checkers extends Game {
             high = 4;
         }
 
+        // Fix adding to pieceMoves and actionSequence
         for(; i < high; i++) {
             Tile dest = isValidDest(origin, directions[i], board, 1);
-            if(dest != null) {
+            if(dest != null) { // Destination is valid
                 ArrayList<Tile> moveSequence = new ArrayList<>(); // For multi-capture moves
                 Tile captured = captureMade(board, origin, dest);
-                if(captured != null)
-                    pieceMoves.addAll(getValidMoves(dest, isKing, board));
+
+                // Need to disregard all previous items in pieceMoves and add only capture actionSequences
+                if(captured != null) { // If capture made
+                    ArrayList<Tile> checkMove = new ArrayList<>();
+                    checkMove.add(origin);
+                    checkMove.add(dest);
+                    board = result(new State(board, isKing), checkMove).getBoard();
+                    // board.displayBoard();
+                    for(int j = 0; j < pieceMoves.size(); j++)
+                        if(pieceMoves.get(j).size() < 3)
+                            pieceMoves.remove(j);
+                    pieceMoves.addAll(getValidMoves(dest, isKing, board, pieceMoves));
+                }
+
                 moveSequence.add(origin);
+                moveSequence.add(dest);
                 // currMove[1] = dest;
                 pieceMoves.add(moveSequence);
                 
@@ -167,6 +176,7 @@ public class Checkers extends Game {
             if(i < action.size() - 1)
                 System.out.print(" to ");
         }
+        System.out.println();
         
     }
 
