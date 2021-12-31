@@ -6,11 +6,11 @@
 
 public class Minimax {
     public int minimax(State s, Game game) {
-        // if(game.isTerminal(s))
-        //     return game.utility(s, s.isMaxTurn()); //2nd param doesnt look right
-        // else if(player(s)) {
-
-        // }
+        if(game.isTerminal(s))
+            return game.utility(s);
+        else {
+            
+        }
 
         int utility = 0;
         return utility;

@@ -56,6 +56,11 @@ public class Checkers extends Game {
         dest.toggleOccupant(origin.getOccupant());
         origin.toggleOccupant(null);
 
+        // Updates board if a move was a capture
+        if(dest.getRow() - 2 == origin.getRow() || dest.getRow() + 2 == origin.getRow()) {
+
+        }
+
         State result = new State(newBoard, !s.isMaxTurn());
         return result;
     }
@@ -88,7 +93,7 @@ public class Checkers extends Game {
                 return board.getTile(newRow, newCol);
             else
                 if(dist < 2 && board.getTile(newRow, newCol).getOccupant().isMaxPiece() != origin.getOccupant().isMaxPiece()) // if diag piece is not current's piece
-                    return isValidDest(origin, direction, board, 2);
+                    return isValidDest(origin, direction, board, dist + 1);
         }
         return null;
     }
@@ -122,10 +127,41 @@ public class Checkers extends Game {
                 currMove[0] = tile;
                 currMove[1] = dest;
                 pieceMoves.add(currMove);
+                if(captureMade(board, currMove, directions[i]) != null)
+                    pieceMoves.addAll(getValidMoves(currMove[1], isKing, board));
             }
         }
 
         return pieceMoves;
+    }
+
+    private Tile captureMade(Board board, Tile[] action, String direction) {
+        // If a capture was done
+        if(action[0].getRow() - action[1].getRow() > 1 || action[1].getRow() - action[0].getRow() > 1) {
+            int capturedRow = action[0].getRow();
+            int capturedCol = action[0].getCol();
+
+            switch(direction) {
+                case "SW":
+                    capturedRow++;
+                    capturedCol--;
+                    break;
+                case "SE":
+                    capturedRow++;
+                    capturedCol++;
+                    break;
+                case "NW":
+                    capturedRow--;
+                    capturedCol--;
+                    break;
+                default:
+                    capturedRow--;
+                    capturedCol++;
+            }
+            return board.getTile(capturedRow, capturedCol);
+        }
+            
+        return null;
     }
 
     // Debugging
