@@ -2,6 +2,7 @@ public class Tile {
     private Piece occupant;
     private boolean occupied;
     private boolean isBlack;
+    private boolean maxEdge;
     private int row;
     private int col;
 
@@ -28,6 +29,14 @@ public class Tile {
 
     public boolean isBlack() {
         return isBlack;
+    }
+
+    public boolean isMaxEdge() {
+        return maxEdge;
+    }
+
+    public void setMaxEdge(boolean max) {
+        maxEdge = max;
     }
 
     private void setOccupant(Piece occupant) {

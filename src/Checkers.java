@@ -64,8 +64,9 @@ public class Checkers extends Game {
                     capture.toggleOccupant(null);
                 dest.toggleOccupant(origin.getOccupant());
                 origin.toggleOccupant(null);
+                if(dest.isMaxEdge() != dest.getOccupant().isMaxPiece())
+                    dest.getOccupant().setKing();
             }
-            
         }
 
         State result = new State(newBoard, !s.isMaxTurn());

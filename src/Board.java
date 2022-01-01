@@ -15,6 +15,10 @@ public class Board {
                 tiles[i][j] = new Tile(i, j);
                 if((i % 2 == 0) != (j % 2 == 0))
                     tiles[i][j].setBlack();
+                if(i == 0)
+                    tiles[i][j].setMaxEdge(true);
+                else if(i == 7)
+                    tiles[i][j].setMaxEdge(false);
             }
         
         for(int i = 0; i < 3; i++)
