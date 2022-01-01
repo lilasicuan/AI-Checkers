@@ -76,7 +76,9 @@ public class Checkers extends Game {
         return actions(s).isEmpty();
     }
 
-    private Tile getDest(Tile origin, String direction, Board board, int dist) {
+    // For King pieces, there might be problem if the multicapture action sequence leads
+    // back to the original space since we don't pass updated boards anymore.
+    private Tile getDest(Tile origin, String direction, Board board, int dist, boolean isMax) {
         int newRow;
         int newCol;
         switch(direction) {
@@ -100,8 +102,8 @@ public class Checkers extends Game {
             if(!board.getTile(newRow, newCol).isOccupied())
                 return board.getTile(newRow, newCol);
             else
-                if(dist < 2 && board.getTile(newRow, newCol).getOccupant().isMaxPiece() != origin.getOccupant().isMaxPiece()) // if diag piece is not current's piece
-                    return getDest(origin, direction, board, 2);
+                if(dist < 2 && board.getTile(newRow, newCol).getOccupant().isMaxPiece() != isMax) // if diag piece is not current's piece
+                    return getDest(origin, direction, board, 2, isMax);
         }
         return null;
     }
@@ -132,19 +134,13 @@ public class Checkers extends Game {
 
         // Fix adding to pieceMoves and actionSequence
         for(; i < high; i++) {
-            Tile dest = getDest(origin, directions[i], board, 1);
+            Tile dest = getDest(origin, directions[i], board, 1, occupant.isMaxPiece());
             if(dest != null) { // Destination is valid
                 actionSequence.add(origin);
 
                 captured = captureMade(board, origin, dest);
-                if(captured != null) {
-                    ArrayList<Tile> currentMove = new ArrayList<>();
-                    currentMove.add(origin);
-                    currentMove.add(dest);
-                    board = result(new State(board, occupant.isMaxPiece()), currentMove).getBoard(); //Need to revert board when checking a fork in an action sequence
-                    board.displayBoard();
+                if(captured != null)
                     pieceMoves.addAll(getValidMoves(dest, isKing, board, actionSequence));
-                }
                 else
                     if(actionSequence.size() < 2)
                         actionSequence.add(dest);
