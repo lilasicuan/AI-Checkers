@@ -18,7 +18,7 @@ public class Checkers extends Game {
                 Tile currTile = currBoard.getTile(i, j);
                 // If tile is occupied and if occupant is one of current player's pieces
                 if(currTile.isOccupied() && currTile.getOccupant().isMaxPiece() == s.isMaxTurn()) {
-                    actions.addAll(getValidMoves(currBoard.getTile(i, j), currTile.getOccupant().isMaxPiece(), currBoard, new ArrayList<Tile>()));
+                    actions.addAll(getValidMoves(currTile, currTile.getOccupant().isMaxPiece(), currTile.getOccupant().isKingPiece(), currBoard, new ArrayList<Tile>()));
                 }
             }
         }
@@ -108,11 +108,9 @@ public class Checkers extends Game {
         return null;
     }
 
-    private ArrayList<ArrayList<Tile>> getValidMoves(Tile origin, boolean isKing, Board board, ArrayList<Tile> actionSequence) {
-        // board.displayBoard();
-
+    private ArrayList<ArrayList<Tile>> getValidMoves(Tile origin, boolean isMax, boolean isKing, Board board, ArrayList<Tile> actionSequence) {
         ArrayList<ArrayList<Tile>> pieceMoves = new ArrayList<>();
-        Piece occupant = origin.getOccupant();
+        // Piece occupant = origin.getOccupant();
         String[] directions = {"SW", "SE", "NW", "NE"};
         Tile captured = null;
 
@@ -121,26 +119,26 @@ public class Checkers extends Game {
         int high = 2;
 
         // will check directions 2 and 3
-        if(!occupant.isMaxPiece()) {
+        if(!isMax) {
             i = 2;
             high = 4;
         }
 
         // Will check all directions
-        if(occupant.isKingPiece()) {
+        if(isKing) {
             i = 0;
             high = 4;
         }
 
         // Fix adding to pieceMoves and actionSequence
         for(; i < high; i++) {
-            Tile dest = getDest(origin, directions[i], board, 1, occupant.isMaxPiece());
+            Tile dest = getDest(origin, directions[i], board, 1, isMax);
             if(dest != null) { // Destination is valid
                 actionSequence.add(origin);
 
                 captured = captureMade(board, origin, dest);
                 if(captured != null)
-                    pieceMoves.addAll(getValidMoves(dest, isKing, board, actionSequence));
+                    pieceMoves.addAll(getValidMoves(dest, isMax, isKing, board, actionSequence));
                 else
                     if(actionSequence.size() < 2)
                         actionSequence.add(dest);
@@ -152,8 +150,10 @@ public class Checkers extends Game {
 
         if(captured != null)
             for(int j = 0; j < pieceMoves.size(); j++) {
-                if(pieceMoves.get(j).size() < 3)
+                if(pieceMoves.get(j).size() < 3) {
+                    // System.out.println("Removed noncapture action sequence");
                     pieceMoves.remove(j);
+                }
             }
 
         // displayAllActions(pieceMoves);
