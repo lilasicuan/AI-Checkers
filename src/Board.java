@@ -47,6 +47,7 @@ public class Board {
                     tiles[i][j].toggleOccupant(new Piece(true));
 
         tiles[3][2].toggleOccupant(new Piece(false));
+        tiles[5][2].toggleOccupant(new Piece(false));
         tiles[5][4].toggleOccupant(new Piece(false));
     }
 
