@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Stack;
 
 public class Checkers extends Game {
     // Will generate the initial state of the game
@@ -8,22 +7,30 @@ public class Checkers extends Game {
         return init;
     }
 
-    public ArrayList<ArrayList<Tile>> actions(State s) {
-        // Each Tile array is the origin tile and destination tile
-        ArrayList<ArrayList<Tile>> actions = new ArrayList<>();
-
+    public ArrayList<ArrayList<Action>> actions(State s) {
+        ArrayList<ArrayList<Action>> actions = new ArrayList<>();
         Board currBoard = s.getBoard();
 
         for(int i = 0; i < 8; i++) {
             for(int j = 0; j < 8; j++) {
                 Tile currTile = currBoard.getTile(i, j);
                 // If tile is occupied and if occupant is one of current player's pieces
-                if(currTile.isOccupied() && currTile.getOccupant().isMaxPiece() == s.isMaxTurn()) {
-                    actions.addAll(getValidMoves(currTile, currTile.getOccupant().isMaxPiece(), currTile.getOccupant().isKingPiece(), currBoard, new Stack<Tile>()));
-                }
+                if(currTile.isOccupied() && currTile.getOccupant().isMaxPiece() == s.isMaxTurn())
+                    actions.addAll(getValidMoves(currTile, currBoard, new ArrayList<>(), false));
             }
         }
 
+        boolean hasCapture = false;
+        for(int i = 0; i < actions.size(); i++)
+            if(actions.get(i).size() > 1) {
+                hasCapture = true;
+                break;
+            }
+        
+        if(hasCapture)
+            actions.removeIf(action -> action.size() < 2);
+
+        displayAllActions(actions);
         return actions;
     }
 
@@ -77,96 +84,98 @@ public class Checkers extends Game {
         return actions(s).isEmpty();
     }
 
-    // For King pieces, there might be problem if the multicapture action sequence leads
-    // back to the original space since we don't pass updated boards anymore.
-    private Tile getDest(Tile origin, String direction, Board board, int dist, boolean isMax) {
-        int newRow;
-        int newCol;
-        switch(direction) {
-            case "SW":
-                newRow = origin.getRow() + dist;
-                newCol = origin.getCol() - dist;
-                break;
-            case "SE":
-                newRow = origin.getRow() + dist;
-                newCol = origin.getCol() + dist;
-                break;
-            case "NW":
-                newRow = origin.getRow() - dist;
-                newCol = origin.getCol() - dist;
-                break;
-            default:
-                newRow = origin.getRow() - dist;
-                newCol = origin.getCol() + dist;
+    private boolean isOutOfBounds(int x, int y) {
+        if (x >= 8 || y >= 8 || x <= 0 || y <= 0){
+            return true;
         }
-        if((newRow < 8 && newRow >= 0) && (newCol >= 0 && newCol < 8)) { // If destination is within bounds
-            // System.out.println(direction + " [" + origin.getRow() + ", " + origin.getCol() + "] Occupied: " + String.valueOf(origin.isOccupied()));
-            if(!board.getTile(newRow, newCol).isOccupied())
-                return board.getTile(newRow, newCol);
-            else
-                if(dist < 2 && board.getTile(newRow, newCol).getOccupant().isMaxPiece() != isMax) // if diag piece is not current's piece
-                    return getDest(origin, direction, board, 2, isMax);
-        }
-        return null;
+        return false;
     }
 
-    private ArrayList<ArrayList<Tile>> getValidMoves(Tile origin, boolean isMax, boolean isKing, Board board, Stack<Tile> actionStack) {
-        ArrayList<ArrayList<Tile>> pieceMoves = new ArrayList<>();
-        // Piece occupant = origin.getOccupant();
-        String[] directions = {"SW", "SE", "NW", "NE"};
-        Tile captured = null;
+    private int[][] getDir(Tile tile) {
+        int[][] isMaxDir = {{-1, 1}, {1, 1}};
+        int[][] isNotMaxDir = {{-1, -1}, {1, -1}};
+        int[][] isKingDir = {{-1, 1}, {1, 1}, {-1, -1}, {1, -1}};
 
-        // Will check directions 0 and 1
-        int i = 0;
-        int high = 2;
+        int[][] currentDir;
+        boolean isKing = tile.getOccupant().isKingPiece();
+        boolean isMax = tile.getOccupant().isMaxPiece();
+        if (isKing)
+            currentDir = isKingDir;
+        else if (isMax)
+            currentDir = isMaxDir;
+        else
+            currentDir = isNotMaxDir;
 
-        // will check directions 2 and 3
-        if(!isMax) {
-            i = 2;
-            high = 4;
+        return currentDir;
+    }
+
+    private ArrayList<int[]> getAttackMoves(Tile tile, Board board) {
+        int[][] possibleDirections = getDir(tile);
+        ArrayList<int[]> attackMoves = new ArrayList<>();
+        for (int[] dir : possibleDirections){
+            int tempDestX = tile.getCol() + dir[0];
+            int tempDestY = tile.getRow() + dir[1];
+            if (isOutOfBounds(tempDestY, tempDestX)) {continue;}
+            Tile destinationTile = board.getTile(tempDestY, tempDestX);
+            
+            if (destinationTile.isOccupied()){  
+                if (destinationTile.getOccupant().isMaxPiece() != tile.getOccupant().isMaxPiece()){
+                    attackMoves.add(dir);
+                }
+            }              
         }
+        return attackMoves;
+    }
 
-        // Will check all directions
-        if(isKing) {
-            i = 0;
-            high = 4;
-        }
 
-        // Fix adding to pieceMoves and actionSequence
-        for(; i < high; i++) {
-            Tile dest = getDest(origin, directions[i], board, 1, isMax);
-            if(dest != null) { // Destination is valid
-                actionStack.push(origin);
-
-                captured = captureMade(board, origin, dest);
-                if(captured != null)
-                    pieceMoves.addAll(getValidMoves(dest, isMax, isKing, board, actionStack));
-                else
-                    if(actionStack.size() < 2)
-                        actionStack.push(dest);
-                ArrayList<Tile> actionSequence = new ArrayList<>(actionStack);
-                pieceMoves.add(actionSequence);
-                if(!actionStack.isEmpty())
-                    actionStack.pop();
-
-                displayAction(actionSequence);
-                // actionSequence.clear();
+    private boolean expandActionSequence(Tile tile, Board board, ArrayList<Action> actionSequence, ArrayList<ArrayList<Action>> allMoves) {
+        ArrayList<int[]> attackMoves = getAttackMoves(tile, board);
+        boolean hasMoves = false;
+        if (attackMoves.size() != 0) {
+            hasMoves = true;
+            for (int[] dir: attackMoves){
+                ArrayList<Action> localActionSequence = new ArrayList<>(actionSequence);
+                Tile captureTile = board.getTile(tile.getRow() + dir[1], tile.getCol() + dir[0]);
+                Tile landingTile = board.getTile(tile.getRow() + dir[1] * 2, tile.getCol() + dir[0] * 2);
+                Action attackAction = new Action();
+                attackAction.newAttack(tile.getOccupant(), tile, landingTile, captureTile.getOccupant());
+                localActionSequence.add(attackAction);
+                board.doMove(attackAction);
+                expandActionSequence(landingTile, board, localActionSequence, allMoves);
+                board.undoMove();
+                
             }
         }
+        if (!hasMoves) { // Terminal Node
+            if (!actionSequence.isEmpty()){
+                allMoves.add(actionSequence);
+            }
+            return false;
+        }
+        return true;
+    }
 
-        if(captured != null)
-            for(int j = 0; j < pieceMoves.size(); j++) {
-                if(pieceMoves.get(j).size() < 3) {
-                    // System.out.println("Removed noncapture action sequence");
-                    pieceMoves.remove(j);
+    private ArrayList<ArrayList<Action>> getValidMoves(Tile origin, Board board, ArrayList<ArrayList<Action>> allMoves, boolean isAttackSequence) {
+        if (!expandActionSequence(origin, board, new ArrayList<Action>(), allMoves)) {
+            int[][] directions = getDir(origin);
+            for (int[] dir : directions) {
+                ArrayList<Action> actionSequence = new ArrayList<>();
+                int tempDestX = origin.getCol() + dir[0];
+                int tempDestY = origin.getRow() + dir[1];
+
+                if(!isOutOfBounds(tempDestY, tempDestX)) {
+                    Tile destinationTile = board.getTile(tempDestY, tempDestX);
+                    if(!destinationTile.isOccupied()) {
+                        Action newAction = new Action();
+                        newAction.newMove(origin.getOccupant(), origin, destinationTile);
+                        actionSequence.add(newAction);
+                        allMoves.add(actionSequence);
+                    }
                 }
             }
-
-        // displayAllActions(pieceMoves);
-        // if(!actionStack.isEmpty())
-        //     actionStack.pop();
-
-        return pieceMoves;
+        }
+        
+        return allMoves;
     }
 
     private Tile captureMade(Board board, Tile origin, Tile dest) {
@@ -182,19 +191,19 @@ public class Checkers extends Game {
     }
 
     // Debugging
-    public void displayAction(ArrayList<Tile> action) {
-        for(int i = 0; i < action.size(); i++) {
-            System.out.print("[" + action.get(i).getRow() + ", " + action.get(i).getCol() + "]");
-            if(i < action.size() - 1)
-                System.out.print(" to ");
+    public void displayAction(ArrayList<Action> actions) {
+        for (Action action: actions) {
+            action.display();
         }
-        System.out.println();
+        System.out.println("=== End Of Action Sequence");
         
     }
 
-    public void displayAllActions(ArrayList<ArrayList<Tile>> actions) {
-        for(int i = 0; i < actions.size(); i++)
-            displayAction(actions.get(i));
+    public void displayAllActions(ArrayList<ArrayList<Action>> actions) {
+        System.out.println("DISPLAYING");
+        for (ArrayList<Action> action : actions){
+            displayAction(action);
+        }
     }
     
 }

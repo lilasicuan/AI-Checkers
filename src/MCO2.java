@@ -8,7 +8,7 @@ public class MCO2 {
         // Debugging
         Checkers checkers = new Checkers();
         State init = checkers.initGame();
-        ArrayList<ArrayList<Tile>> actions = checkers.actions(init);
+        ArrayList<ArrayList<Action>> actions = checkers.actions(init);
         // ArrayList<Tile> sequence = new ArrayList<>();
 
         // sequence.add(new Tile(2, 7));
