@@ -98,25 +98,6 @@ public class Checkers extends Game {
         return currentDir;
     }
 
-    private ArrayList<int[]> getAttackMoves(Tile tile, Board board) {
-        int[][] possibleDirections = getDir(tile);
-        ArrayList<int[]> attackMoves = new ArrayList<>();
-        for (int[] dir : possibleDirections){
-            int tempDestX = tile.getCol() + dir[0];
-            int tempDestY = tile.getRow() + dir[1];
-            if (isOutOfBounds(tempDestY, tempDestX)) {continue;}
-            Tile destinationTile = board.getTile(tempDestY, tempDestX);
-            
-            if (destinationTile.isOccupied()){  
-                if (destinationTile.getOccupant().isMaxPiece() != tile.getOccupant().isMaxPiece()){
-                    attackMoves.add(dir);
-                }
-            }              
-        }
-        return attackMoves;
-    }
-
-
     private boolean expandActionSequence(Tile tile, Board board, ArrayList<Action> actionSequence, ArrayList<ArrayList<Action>> allMoves) {
         ArrayList<int[]> attackMoves = getAttackMoves(tile, board);
         boolean hasMoves = false;
@@ -142,6 +123,24 @@ public class Checkers extends Game {
             return false;
         }
         return true;
+    }
+
+    private ArrayList<int[]> getAttackMoves(Tile tile, Board board) {
+        int[][] possibleDirections = getDir(tile);
+        ArrayList<int[]> attackMoves = new ArrayList<>();
+        for (int[] dir : possibleDirections){
+            int tempDestX = tile.getCol() + dir[0];
+            int tempDestY = tile.getRow() + dir[1];
+
+            if(!isOutOfBounds(tempDestY, tempDestX)) {
+                Tile destinationTile = board.getTile(tempDestY, tempDestX);
+                if(destinationTile.isOccupied())  
+                    if(destinationTile.getOccupant().isMaxPiece() != tile.getOccupant().isMaxPiece())
+                        attackMoves.add(dir);
+            }
+                       
+        }
+        return attackMoves;
     }
 
     private ArrayList<ArrayList<Action>> getValidMoves(Tile origin, Board board, ArrayList<ArrayList<Action>> allMoves, boolean isAttackSequence) {
