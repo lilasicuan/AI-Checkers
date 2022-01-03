@@ -1,5 +1,9 @@
+import java.util.ArrayList;
+
 public class Board {
+
     private Tile[][] tiles;
+    public ArrayList<Action> moveList = new ArrayList<>();
 
     public Board(boolean debug) {
         tiles = new Tile[8][8];
@@ -24,12 +28,12 @@ public class Board {
         for(int i = 0; i < 3; i++)
             for(int j = 0; j < 8; j++)
                 if(tiles[i][j].isBlack())
-                    tiles[i][j].toggleOccupant(new Piece(true));
+                    tiles[i][j].toggleOccupant(new Piece(true, i, j));
 
         for(int i = 5; i < 8; i++)
             for(int j = 0; j < 8; j++)
                 if(tiles[i][j].isBlack())
-                    tiles[i][j].toggleOccupant(new Piece(false));
+                    tiles[i][j].toggleOccupant(new Piece(false, i, j));
     }
 
     public void initDebug() {
@@ -44,11 +48,34 @@ public class Board {
         for(int i = 0; i < 3; i++)
             for(int j = 0; j < 8; j++)
                 if(tiles[i][j].isBlack())
-                    tiles[i][j].toggleOccupant(new Piece(true));
+                    tiles[i][j].toggleOccupant(new Piece(true, i, j));
 
-        tiles[3][2].toggleOccupant(new Piece(false));
-        tiles[5][2].toggleOccupant(new Piece(false));
-        tiles[5][4].toggleOccupant(new Piece(false));
+        tiles[3][2].toggleOccupant(new Piece(false, 3, 2));
+        tiles[5][2].toggleOccupant(new Piece(false, 5, 2));
+        tiles[5][4].toggleOccupant(new Piece(false, 5, 4));
+    }
+
+    public void doMove(Action action) {
+        moveList.add(action);
+
+        action.getPiece().setRow(action.getDestination().getRow());
+        action.getPiece().setCol(action.getDestination().getCol());
+        tiles[action.getOrigin().getRow()][action.getOrigin().getCol()].toggleOccupant(null);
+        tiles[action.getDestination().getRow()][action.getDestination().getCol()].toggleOccupant(action.getPiece());
+
+        if(action.isCapture())
+            tiles[action.getCaptured().getRow()][action.getCaptured().getCol()].toggleOccupant(null);
+    }
+
+
+    public void undoMove() {
+        Action action = moveList.get(moveList.size() - 1);
+        moveList.remove(moveList.size() - 1);
+        tiles[action.getOrigin().getRow()][action.getOrigin().getCol()].toggleOccupant(action.getPiece());
+        tiles[action.getDestination().getRow()][action.getDestination().getCol()].toggleOccupant(null);
+
+        if(action.isCapture())
+            tiles[action.getCaptured().getRow()][action.getCaptured().getCol()].toggleOccupant(action.getCaptured());
     }
 
     public Tile getTile(int row, int col) {
