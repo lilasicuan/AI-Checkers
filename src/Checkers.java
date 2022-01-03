@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Stack;
 
 public class Checkers extends Game {
     // Will generate the initial state of the game
@@ -18,7 +19,7 @@ public class Checkers extends Game {
                 Tile currTile = currBoard.getTile(i, j);
                 // If tile is occupied and if occupant is one of current player's pieces
                 if(currTile.isOccupied() && currTile.getOccupant().isMaxPiece() == s.isMaxTurn()) {
-                    actions.addAll(getValidMoves(currTile, currTile.getOccupant().isMaxPiece(), currTile.getOccupant().isKingPiece(), currBoard, new ArrayList<Tile>()));
+                    actions.addAll(getValidMoves(currTile, currTile.getOccupant().isMaxPiece(), currTile.getOccupant().isKingPiece(), currBoard, new Stack<Tile>()));
                 }
             }
         }
@@ -93,6 +94,7 @@ public class Checkers extends Game {
             case "NW":
                 newRow = origin.getRow() - dist;
                 newCol = origin.getCol() - dist;
+                break;
             default:
                 newRow = origin.getRow() - dist;
                 newCol = origin.getCol() + dist;
@@ -108,7 +110,7 @@ public class Checkers extends Game {
         return null;
     }
 
-    private ArrayList<ArrayList<Tile>> getValidMoves(Tile origin, boolean isMax, boolean isKing, Board board, ArrayList<Tile> actionSequence) {
+    private ArrayList<ArrayList<Tile>> getValidMoves(Tile origin, boolean isMax, boolean isKing, Board board, Stack<Tile> actionStack) {
         ArrayList<ArrayList<Tile>> pieceMoves = new ArrayList<>();
         // Piece occupant = origin.getOccupant();
         String[] directions = {"SW", "SE", "NW", "NE"};
@@ -134,17 +136,21 @@ public class Checkers extends Game {
         for(; i < high; i++) {
             Tile dest = getDest(origin, directions[i], board, 1, isMax);
             if(dest != null) { // Destination is valid
-                actionSequence.add(origin);
+                actionStack.push(origin);
 
                 captured = captureMade(board, origin, dest);
                 if(captured != null)
-                    pieceMoves.addAll(getValidMoves(dest, isMax, isKing, board, actionSequence));
+                    pieceMoves.addAll(getValidMoves(dest, isMax, isKing, board, actionStack));
                 else
-                    if(actionSequence.size() < 2)
-                        actionSequence.add(dest);
+                    if(actionStack.size() < 2)
+                        actionStack.push(dest);
+                ArrayList<Tile> actionSequence = new ArrayList<>(actionStack);
                 pieceMoves.add(actionSequence);
+                if(!actionStack.isEmpty())
+                    actionStack.pop();
+
                 displayAction(actionSequence);
-                actionSequence.clear();
+                // actionSequence.clear();
             }
         }
 
@@ -157,6 +163,8 @@ public class Checkers extends Game {
             }
 
         // displayAllActions(pieceMoves);
+        // if(!actionStack.isEmpty())
+        //     actionStack.pop();
 
         return pieceMoves;
     }

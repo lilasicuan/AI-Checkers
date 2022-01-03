@@ -18,7 +18,7 @@ public class MCO2 {
         // init.getBoard().displayBoard();
 
         //Expected 7 actions upon init
-        checkers.displayAllActions(actions);
+        // checkers.displayAllActions(actions);
     }
 
 }
