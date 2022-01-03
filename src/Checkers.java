@@ -30,7 +30,6 @@ public class Checkers extends Game {
         if(hasCapture)
             actions.removeIf(action -> action.size() < 2);
 
-        displayAllActions(actions);
         return actions;
     }
 
@@ -58,22 +57,12 @@ public class Checkers extends Game {
         return 0; // Default if draw
     }
 
-    public State result(State s, ArrayList<Tile> actionSequence) {
+    public State result(State s, ArrayList<Action> actionSequence) {
         Board newBoard = s.getBoard();
 
         for(int i = 0; i < actionSequence.size(); i++) {
-            if(i < actionSequence.size() - 1) {
-                Tile origin = newBoard.getTile(actionSequence.get(i).getRow(), actionSequence.get(i).getCol());
-                Tile dest = newBoard.getTile(actionSequence.get(i + 1).getRow(), actionSequence.get(i + 1).getCol());
-
-                Tile capture = captureMade(newBoard, origin, dest);
-                if(capture != null) // if a capture was made, removes captured piece from board
-                    capture.toggleOccupant(null);
-                dest.toggleOccupant(origin.getOccupant());
-                origin.toggleOccupant(null);
-                if(dest.isMaxEdge() != null && dest.isMaxEdge() != dest.getOccupant().isMaxPiece())
-                    dest.getOccupant().setKing();
-            }
+            newBoard.doMove(actionSequence.get(i));
+            newBoard.displayBoard();
         }
 
         State result = new State(newBoard, !s.isMaxTurn());
@@ -176,18 +165,6 @@ public class Checkers extends Game {
         }
         
         return allMoves;
-    }
-
-    private Tile captureMade(Board board, Tile origin, Tile dest) {
-        // If a capture was done
-        if(Math.abs(origin.getRow() - dest.getRow()) > 1) {
-            int capturedRow = Math.max(origin.getRow(), dest.getRow()) - 1;
-            int capturedCol = Math.max(origin.getCol(), dest.getCol()) - 1;
-
-            return board.getTile(capturedRow, capturedCol);
-        }
-            
-        return null;
     }
 
     // Debugging
