@@ -7,8 +7,8 @@ public class Checkers extends Game {
         return init;
     }
 
-    public ArrayList<ArrayList<Action>> actions(State s) {
-        ArrayList<ArrayList<Action>> actions = new ArrayList<>();
+    public ArrayList<ActionSequence> actions(State s) {
+        ArrayList<ActionSequence> actions = new ArrayList<>();
         Board currBoard = s.getBoard();
 
         for(int i = 0; i < 8; i++) {
@@ -22,13 +22,13 @@ public class Checkers extends Game {
 
         boolean hasCapture = false;
         for(int i = 0; i < actions.size(); i++)
-            if(actions.get(i).size() > 1) {
+            if(actions.get(i).getActionSequence().size() > 1) {
                 hasCapture = true;
                 break;
             }
         
         if(hasCapture)
-            actions.removeIf(action -> action.size() < 2);
+            actions.removeIf(action -> action.getActionSequence().size() < 2);
 
         return actions;
     }
@@ -57,11 +57,11 @@ public class Checkers extends Game {
         return 0; // Default if draw
     }
 
-    public State result(State s, ArrayList<Action> actionSequence) {
+    public State result(State s, ActionSequence actionSequence) {
         Board newBoard = s.getBoard();
 
-        for(int i = 0; i < actionSequence.size(); i++) {
-            newBoard.doMove(actionSequence.get(i));
+        for(int i = 0; i < actionSequence.getActionSequence().size(); i++) {
+            newBoard.doMove(actionSequence.getActionSequence().get(i));
             // newBoard.displayBoard();
         }
 
@@ -98,9 +98,10 @@ public class Checkers extends Game {
         return currentDir;
     }
 
-    private boolean expandActionSequence(Tile tile, Board board, ArrayList<Action> actionSequence, ArrayList<ArrayList<Action>> allMoves) {
+    private boolean expandActionSequence(Tile tile, Board board, ArrayList<Action> actionSequence, ArrayList<ActionSequence> allMoves) {
         ArrayList<int[]> attackMoves = getAttackMoves(tile, board);
         boolean hasMoves = false;
+
         if (attackMoves.size() != 0) {
             hasMoves = true;
             for (int[] dir: attackMoves){
@@ -117,14 +118,16 @@ public class Checkers extends Game {
             }
         }
         if (!hasMoves) { // Terminal Node
-            if (!actionSequence.isEmpty()){
-                allMoves.add(actionSequence);
+            if (!actionSequence.isEmpty()) {
+                // Check for ordering value
+                allMoves.add(new ActionSequence(actionSequence));
             }
             return false;
         }
         return true;
     }
 
+    // Returns an array of direction values that have captures
     private ArrayList<int[]> getAttackMoves(Tile tile, Board board) {
         int[][] possibleDirections = getDir(tile);
         ArrayList<int[]> attackMoves = new ArrayList<>();
@@ -144,8 +147,8 @@ public class Checkers extends Game {
         return attackMoves;
     }
 
-    private ArrayList<ArrayList<Action>> getValidMoves(Tile origin, Board board, ArrayList<ArrayList<Action>> allMoves, boolean isAttackSequence) {
-        if (!expandActionSequence(origin, board, new ArrayList<Action>(), allMoves)) {
+    private ArrayList<ActionSequence> getValidMoves(Tile origin, Board board, ArrayList<ActionSequence> allMoves, boolean isAttackSequence) {
+        if (!expandActionSequence(origin, board, new ArrayList<Action>(), allMoves)) { // If there are no possible capture moves
             int[][] directions = getDir(origin);
             for (int[] dir : directions) {
                 ArrayList<Action> actionSequence = new ArrayList<>();
@@ -158,13 +161,18 @@ public class Checkers extends Game {
                         Action newAction = new Action();
                         newAction.newMove(origin.getOccupant(), origin, destinationTile);
                         actionSequence.add(newAction);
-                        allMoves.add(actionSequence);
+                        // Check for ordering value
+                        allMoves.add(new ActionSequence(actionSequence));
                     }
                 }
             }
         }
         
         return allMoves;
+    }
+
+    private Integer computeOrdering(ActionSequence sequence) {
+        return 1;
     }
 
     // Debugging

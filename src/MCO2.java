@@ -7,7 +7,7 @@ public class MCO2 {
         State init = checkers.initGame();
         init.getBoard().displayBoard();
 
-        ArrayList<ArrayList<Action>> actions = checkers.actions(init);
+        ArrayList<ActionSequence> actions = checkers.actions(init);
         checkers.result(init, actions.get(0));
     }
 
