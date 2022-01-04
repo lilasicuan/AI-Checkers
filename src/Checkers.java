@@ -62,7 +62,7 @@ public class Checkers extends Game {
 
         for(int i = 0; i < actionSequence.size(); i++) {
             newBoard.doMove(actionSequence.get(i));
-            newBoard.displayBoard();
+            // newBoard.displayBoard();
         }
 
         State result = new State(newBoard, !s.isMaxTurn());
@@ -128,7 +128,8 @@ public class Checkers extends Game {
     private ArrayList<int[]> getAttackMoves(Tile tile, Board board) {
         int[][] possibleDirections = getDir(tile);
         ArrayList<int[]> attackMoves = new ArrayList<>();
-        for (int[] dir : possibleDirections){
+        
+        for (int[] dir : possibleDirections) {
             int tempDestX = tile.getCol() + dir[0];
             int tempDestY = tile.getRow() + dir[1];
 

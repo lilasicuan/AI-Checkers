@@ -1,8 +1,3 @@
-/**
- * Will hold the following main methods:
- * - minimax(state) :
- * - player(state) : boolean
- */
 import java.util.ArrayList;
 
 // Based on the alpha-beta search algorithm of figure 5.7 of AIMA
@@ -12,9 +7,9 @@ public class AlphaBetaSearch {
         int v = maxValue(state, game, Integer.MIN_VALUE, Integer.MAX_VALUE);
         ArrayList<ArrayList<Action>> actions = game.actions(state);
         for(ArrayList<Action> a : actions) {
-            if(game.result(state, a).getValue() == v)
-                return a;
+            // Check each action's ordering value
         }
+
         return null;
     }
 
@@ -30,6 +25,7 @@ public class AlphaBetaSearch {
                 return v;
             alpha = Math.max(alpha, v);
         }
+
         return v;
     }
 
@@ -45,11 +41,21 @@ public class AlphaBetaSearch {
                 return v;
             beta = Math.min(beta, v);
         }
+
         return v;
     }
 
-    public boolean player(State s) {
+    public boolean playerMax(State s) {
         return s.isMaxTurn();
+    }
+
+    // Has to order action sequences based on ordering value and not just size
+    // How to assign these values tho.
+    public void ordering(ArrayList<ArrayList<Action>> actions, boolean isMax) {
+        if(isMax)
+            actions.sort((a1, a2) -> ((Integer)a1.size()).compareTo((Integer)(a2.size())));
+        else
+            actions.sort((a1, a2) -> ((Integer)a2.size()).compareTo((Integer)(a1.size())));
     }
 
 }

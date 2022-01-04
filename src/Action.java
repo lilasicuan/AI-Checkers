@@ -4,6 +4,7 @@ public class Action {
     private Tile to;
     private Piece captured;
     private boolean isCaptureMove;
+    private Integer orderingValue;
 
     public void newMove(Piece movedPiece, Tile origin, Tile destination) {
         isCaptureMove = false;
@@ -44,6 +45,14 @@ public class Action {
 
     public Piece getCaptured() {
         return captured;
+    }
+
+    public Integer getOrderingValue() {
+        return orderingValue;
+    }
+
+    public void setOrderingValue(int v) {
+        orderingValue = v;
     }
 
 }
