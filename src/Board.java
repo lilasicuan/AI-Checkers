@@ -42,6 +42,10 @@ public class Board {
                 tiles[i][j] = new Tile(i, j);
                 if((i % 2 == 0) != (j % 2 == 0))
                     tiles[i][j].setBlack();
+                if(i == 0)
+                    tiles[i][j].setMaxEdge(true);
+                else if(i == 7)
+                    tiles[i][j].setMaxEdge(false);
             }
         
         // Max player pieces in default positions
@@ -50,9 +54,9 @@ public class Board {
                 if(tiles[i][j].isBlack())
                     tiles[i][j].toggleOccupant(new Piece(true, i, j));
 
-        tiles[3][2].toggleOccupant(new Piece(false, 3, 2));
-        tiles[5][2].toggleOccupant(new Piece(false, 5, 2));
-        tiles[5][4].toggleOccupant(new Piece(false, 5, 4));
+        tiles[2][1].toggleOccupant(null);
+        tiles[5][4].toggleOccupant(new Piece(true, 5, 4));
+        tiles[6][5].toggleOccupant(new Piece(false, 6, 5));
     }
 
     public void doMove(Action action) {

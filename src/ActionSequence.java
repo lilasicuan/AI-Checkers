@@ -8,11 +8,6 @@ public class ActionSequence {
         this.sequence = sequence;
     }
 
-    public ActionSequence(ArrayList<Action> sequence, int orderingValue) {
-        this.sequence = sequence;
-        this.orderingValue = orderingValue;
-    }
-
     public ArrayList<Action> getActionSequence() {
         return sequence;
     }
@@ -23,5 +18,9 @@ public class ActionSequence {
 
     public Integer getOrderingValue() {
         return orderingValue;
+    }
+
+    public void setOrderingValue(Integer v) {
+        orderingValue = v;
     }
 }

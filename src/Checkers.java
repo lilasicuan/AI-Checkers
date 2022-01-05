@@ -3,7 +3,7 @@ import java.util.ArrayList;
 public class Checkers extends Game {
     // Will generate the initial state of the game
     public State initGame() {
-        State init = new State(new Board(true), true);
+        State init = new State(new Board(false), true, null);
         return init;
     }
 
@@ -21,14 +21,17 @@ public class Checkers extends Game {
         }
 
         boolean hasCapture = false;
-        for(int i = 0; i < actions.size(); i++)
-            if(actions.get(i).getActionSequence().size() > 1) {
+
+        for(ActionSequence a : actions) {
+            if(a.getActionSequence().get(0).isCapture())
                 hasCapture = true;
-                break;
-            }
+            computeOrdering(a);
+        }
         
         if(hasCapture)
-            actions.removeIf(action -> action.getActionSequence().size() < 2);
+            actions.removeIf(action -> !action.getActionSequence().get(0).isCapture());
+        
+        ordering(actions, false);
 
         return actions;
     }
@@ -48,33 +51,46 @@ public class Checkers extends Game {
                         minPieces++;
                 }
 
-
-        if(minPieces == 0)
-            return 1;
-        if(maxPieces == 0)
-            return -1;
-
-        return 0; // Default if draw
+        return maxPieces - minPieces;
     }
 
     public State result(State s, ActionSequence actionSequence) {
         Board newBoard = s.getBoard();
 
-        for(int i = 0; i < actionSequence.getActionSequence().size(); i++) {
-            newBoard.doMove(actionSequence.getActionSequence().get(i));
-            // newBoard.displayBoard();
+        for(Action action : actionSequence.getActionSequence()) {
+            newBoard.doMove(action);
+            Tile destination = action.getDestination();
+            if(destination.isMaxEdge() != null && destination.isMaxEdge() != destination.getOccupant().isMaxPiece())
+                destination.getOccupant().setKing();
         }
 
-        State result = new State(newBoard, !s.isMaxTurn());
+        State result = new State(newBoard, !s.isMaxTurn(), s);
+        s.addChild(result);
         return result;
     }
 
     public boolean isTerminal(State s) {
+        int maxPieces = 0;
+        int minPieces = 0;
+
+        for(int i = 0; i < 8; i++) {
+            for(int j = 0; j < 8; j++) {
+                if(s.getBoard().getTile(i, j).isOccupied())
+                    if(s.getBoard().getTile(i, j).getOccupant().isMaxPiece())
+                        maxPieces++;
+                    else
+                        minPieces++;
+            }
+        }
+
+        if(maxPieces == 0 || minPieces == 0)
+            return true;
+
         return actions(s).isEmpty();
     }
 
     private boolean isOutOfBounds(int x, int y) {
-        if (x >= 8 || y >= 8 || x <= 0 || y <= 0){
+        if (x >= 8 || y >= 8 || x < 0 || y < 0){
             return true;
         }
         return false;
@@ -104,9 +120,10 @@ public class Checkers extends Game {
 
         if (attackMoves.size() != 0) {
             hasMoves = true;
-            for (int[] dir: attackMoves){
+            for (int[] dir: attackMoves) {
                 ArrayList<Action> localActionSequence = new ArrayList<>(actionSequence);
                 Tile captureTile = board.getTile(tile.getRow() + dir[1], tile.getCol() + dir[0]);
+                if (isOutOfBounds(tile.getRow() + dir[1] * 2, tile.getCol() + dir[0] * 2)) {continue;}
                 Tile landingTile = board.getTile(tile.getRow() + dir[1] * 2, tile.getCol() + dir[0] * 2);
                 Action attackAction = new Action();
                 attackAction.newAttack(tile.getOccupant(), tile, landingTile, captureTile.getOccupant());
@@ -117,11 +134,9 @@ public class Checkers extends Game {
                 
             }
         }
-        if (!hasMoves) { // Terminal Node
-            if (!actionSequence.isEmpty()) {
-                // Check for ordering value
+        if(!hasMoves) { // Terminal Node
+            if (!actionSequence.isEmpty())
                 allMoves.add(new ActionSequence(actionSequence));
-            }
             return false;
         }
         return true;
@@ -148,7 +163,7 @@ public class Checkers extends Game {
     }
 
     private ArrayList<ActionSequence> getValidMoves(Tile origin, Board board, ArrayList<ActionSequence> allMoves, boolean isAttackSequence) {
-        if (!expandActionSequence(origin, board, new ArrayList<Action>(), allMoves)) { // If there are no possible capture moves
+        if(!expandActionSequence(origin, board, new ArrayList<Action>(), allMoves)) { // If there are no possible capture moves
             int[][] directions = getDir(origin);
             for (int[] dir : directions) {
                 ArrayList<Action> actionSequence = new ArrayList<>();
@@ -161,7 +176,6 @@ public class Checkers extends Game {
                         Action newAction = new Action();
                         newAction.newMove(origin.getOccupant(), origin, destinationTile);
                         actionSequence.add(newAction);
-                        // Check for ordering value
                         allMoves.add(new ActionSequence(actionSequence));
                     }
                 }
@@ -171,22 +185,46 @@ public class Checkers extends Game {
         return allMoves;
     }
 
-    private Integer computeOrdering(ActionSequence sequence) {
-        return 1;
+    private void computeOrdering(ActionSequence sequence) {
+        int value = 0;
+
+        for(Action a : sequence.getActionSequence()) {
+            Tile origin = sequence.getActionSequence().get(0).getOrigin();
+            Tile lastDest = sequence.getActionSequence().get(sequence.getActionSequence().size() - 1).getDestination();
+            if(lastDest.isMaxEdge() != null && lastDest.isMaxEdge() != origin.getOccupant().isMaxPiece())
+                value += 10;
+            if(a.isCapture())
+                value += 10;
+            if(a.getDestination().getCol() == 0 || a.getDestination().getCol() == 7)
+                value += 5;
+        }
+
+        sequence.setOrderingValue(value);
+    }
+
+    private void ordering(ArrayList<ActionSequence> sequence, boolean withOrdering) {
+        if(withOrdering) {
+            boolean isMax = sequence.get(0).getActionSequence().get(0).getPiece().isMaxPiece();
+            if(isMax)
+                sequence.sort((a1, a2) -> a2.getOrderingValue().compareTo(a1.getOrderingValue()));
+            else
+                sequence.sort((a1, a2) -> a1.getOrderingValue().compareTo(a2.getOrderingValue()));
+        }
+        
     }
 
     // Debugging
-    public void displayAction(ArrayList<Action> actions) {
-        for (Action action: actions) {
+    public void displayAction(ActionSequence actions) {
+        for (Action action: actions.getActionSequence()) {
             action.display();
         }
         System.out.println("=== End Of Action Sequence");
         
     }
 
-    public void displayAllActions(ArrayList<ArrayList<Action>> actions) {
+    public void displayAllActions(ArrayList<ActionSequence> actions) {
         System.out.println("DISPLAYING");
-        for (ArrayList<Action> action : actions){
+        for (ActionSequence action : actions){
             displayAction(action);
         }
     }

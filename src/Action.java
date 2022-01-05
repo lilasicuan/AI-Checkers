@@ -23,6 +23,10 @@ public class Action {
     }
 
     public void display() {
+        if(isCaptureMove)
+            System.out.print("Capture>> ");
+        else
+            System.out.print("Move>>>>> ");
         System.out.print("FROM " + from.getRow() + ", " + from.getCol());
         System.out.println(" TO " + to.getRow() + ", " + to.getCol());
     }
